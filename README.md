@@ -29,3 +29,4 @@
 1) $ chmod 770 .env
 1) $ php artisan key:generate
 1) Add missing information in .env file
+1) $ php artisan migrate

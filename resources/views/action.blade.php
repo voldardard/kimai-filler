@@ -91,6 +91,14 @@
             margin: 0 1.5%;
             width: 30%;
         }
+        .form .cln .form-title{
+            color: black;
+            margin-bottom: 0;
+            display: inline-block;
+        }
+        .form .form-little-details{
+            font-size: x-small;
+        }
         #checkDays input{
             width: 10%;
         }
@@ -111,6 +119,8 @@
         }
         .form .widthBlock{
             text-align: left;
+            clear: both;
+            min-height: 90px;
         }
         .red{
             color:red;
@@ -204,6 +214,22 @@
 <div class="action-page">
     <div class="form">
         <form class="action-form" method="POST" action="/preview">
+            <div class="widthBlock">
+                <div  class="cln">
+                  <label class="form-title">Last inserted date: </label><br/>
+                  <span class="form-little-details">(Retrievied dynamically in Kimai)</span>
+                  <br/><br/>
+                  <label class="form-title">Last inserted time: </label><br/>
+                  <span class="form-little-details">(Retrievied dynamically in Kimai)</span>
+                </div>
+                <div  class="cln">
+                  <input type="date" name="dateEnd" required value="{{session('KIMAI_LAST_INSERT_END_DATE')}}"/>
+                  <br/>
+                  <input type="time" name="timeEnd" required value="{{session('KIMAI_LAST_INSERT_END')}}"/>
+                </div>
+
+            </div>
+            <br/>
             <div class="widthBlock">
                 <div id="morningTime" class="cln">
                     <label class="form-title">Morning time</label>

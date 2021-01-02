@@ -27,10 +27,12 @@ class Manage extends Controller
 
     public function preview(Request $request){
         $validatedData = $request->validate([
-            'morningBegin' => ['required', 'regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/'],
-            'morningEnd' => ['required', 'regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/'],
-            'afternoonBegin' => ['required', 'regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/'],
-            'afternoonEnd' => ['required', 'regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/'],
+            'dateEnd' => ['required', 'date'],
+            'timeEnd' => ['required', 'date_format:H:i'],
+            'morningBegin' => ['required', 'date_format:H:i'],
+            'morningEnd' => ['required', 'date_format:H:i'],
+            'afternoonBegin' => ['required', 'date_format:H:i'],
+            'afternoonEnd' => ['required', 'date_format:H:i'],
             'days'=>'required|array|min:1',
             'days.*'=>'boolean',
         ]);
@@ -48,7 +50,12 @@ class Manage extends Controller
         foreach ($request->input('days') as $day => $bool){
             $available_day[]=$day;
         }
-        $d_latest= new DateTime(session('KIMAI_LAST_INSERT_END_DATE').' 01:01:01');
+        try {
+            $d_latest = new DateTime($validatedData['dateEnd'] . ' 01:01:01');
+        } catch (\Exception $e) {
+            $d_latest = new DateTime($request->session()->get('KIMAI_LAST_INSERT_END_DATE'). ' 01:01:01');
+
+        }
         $d_latest_y = (int)$d_latest->format('Y');
         $d_latest_m = (int)$d_latest->format('m');
         $d_latest_d = (int)$d_latest->format('d');
@@ -96,13 +103,14 @@ class Manage extends Controller
         /*
          * Create object array
          */
+         $time=array(
+             ['from'=>$request->input('morningBegin'), 'to'=>$request->input('morningEnd')],
+             ['from'=>$request->input('afternoonBegin'), 'to'=>$request->input('afternoonEnd')]
+         );
+         $timeLastEnd=date_timestamp_get(new DateTime($validatedData['dateEnd'] . ' '.$validatedData['timeEnd'].':01'));
+
         foreach ($list as $timestamp => $day){
             if(in_array($day, $available_day)){
-
-            $time=array(
-                ['from'=>$request->input('morningBegin'), 'to'=>$request->input('morningEnd')],
-                ['from'=>$request->input('afternoonBegin'), 'to'=>$request->input('afternoonEnd')]
-            );
 
                 //object base
                 $obj_date= array();
@@ -112,16 +120,40 @@ class Manage extends Controller
                 $obj_date['created_at']=now();
                 $obj_date['updated_at']=now();
                 $obj_date['previews_id']=$preview_id;
+                print_r(date("Y-m-d", $timestamp));
+                if (date("Y-m-d", $timestamp)!=date("Y-m-d", $timeLastEnd)){
+                  //morning
+                  $obj_date['from']=$validatedData['morningBegin'];
+                  $obj_date['to']=$validatedData['morningEnd'];
+                  $this->previewed[]=$obj_date;
 
-                //morning
-                $obj_date['from']=$request->input('morningBegin');
-                $obj_date['to']=$request->input('morningEnd');
-                $this->previewed[]=$obj_date;
+                  //afternoon
+                  $obj_date['from']=$validatedData['afternoonBegin'];
+                  $obj_date['to']=$validatedData['afternoonEnd'];
+                  $this->previewed[]=$obj_date;
+                }else{
+                  //morning
+                  $timeLastWouldBeginMorning=date_timestamp_get(new DateTime($validatedData['dateEnd'] . ' '.$validatedData['morningBegin'].':01'));
+                  $timeLastWouldBeginAfternoon=date_timestamp_get(new DateTime($validatedData['dateEnd'] . ' '.$validatedData['afternoonBegin'].':01'));
 
-                //afternoon
-                $obj_date['from']=$request->input('afternoonBegin');
-                $obj_date['to']=$request->input('afternoonEnd');
-                $this->previewed[]=$obj_date;
+                  //if time last end is older than morning insert (insert both)
+                  if($timeLastEnd<$timeLastWouldBeginMorning){
+                    //morning
+                    $obj_date['from']=$validatedData['morningBegin'];
+                    $obj_date['to']=$validatedData['morningEnd'];
+                    $this->previewed[]=$obj_date;
+
+                    //afternoon
+                    $obj_date['from']=$validatedData['afternoonBegin'];
+                    $obj_date['to']=$validatedData['afternoonEnd'];
+                    $this->previewed[]=$obj_date;
+                  }elseif ($timeLastEnd<$timeLastWouldBeginAfternoon) {
+                    // just afternoon
+                    $obj_date['from']=$validatedData['afternoonBegin'];
+                    $obj_date['to']=$validatedData['afternoonEnd'];
+                    $this->previewed[]=$obj_date;
+                                    }
+                }
             }
         }
 
@@ -198,7 +230,7 @@ class Manage extends Controller
                         'project'=> intval(session('KIMAI_LAST_INSERT_PROJECT')),
                         'activity'=> intval(session('KIMAI_LAST_INSERT_ACTIVITY')),
                         'tags'=> '',
-                        'description'=>''
+                        'description'=>'kimai-filler'
                         ]
                 ]);
 

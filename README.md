@@ -1,8 +1,8 @@
 
+![alt text](https://i.ibb.co/wKP9Bd7/Firefox-Screenshot-2021-01-02-T13-59-03-744-Z.png)
 
 
 # Quick start
-
 ## Requirements
 * Mysql 5.7 or higher / Mariadb 10 or higher / Postgres 9 or higher
 * apache2
@@ -30,3 +30,8 @@
 1) $ php artisan key:generate
 1) Add missing information in .env file
 1) $ php artisan migrate
+
+![alt text](https://i.ibb.co/qyv1ybg/Firefox-Screenshot-2021-01-02-T13-59-25-254-Z.png)
+
+
+

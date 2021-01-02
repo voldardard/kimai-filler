@@ -9,11 +9,25 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet">
 
     <!-- Scripts -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script type='text/javascript'>
+        function start_loading(iconId){
+            console.log('start_loading: '+iconId);
+            const icon = document.getElementById(iconId);
+            icon.classList.remove("fa-check-circle");
+            icon.classList.add("fa-spinner");
+        }
+        function stop_loading(iconId){
+            console.log('stop_loading: '+iconId);
+            var icon = document.getElementById(iconId);
+            icon.classList.remove("fa-spinner");
+            icon.classList.add("fa-check-circle");
+        }
         function delete_article(id){
+            start_loading('loading-icon-'+id);
             $.ajax({
                 type: "DELETE",
                 url: "{{ $unique_id }}/"+id,
@@ -23,10 +37,13 @@
                 success: function(msg){
                     document.getElementById( 'article-'+(id)).remove();
                     console.log(msg);
+                    stop_loading('loading-icon-'+id);
                 }
             });
+
         }
         function save_article(id){
+            start_loading('loading-icon-'+id);
 
             var article = {};
             article.id = id;
@@ -58,8 +75,10 @@
                     save_article_button.classList.add("disabled-button");
 
                     console.log(msg);
+                    stop_loading('loading-icon-'+id);
                 }
             });
+
         }
         function changed_article(article_id){
             save_article_button = document.getElementById("save-"+article_id);
@@ -74,6 +93,7 @@
 
             }
         }
+
         function add_article(){
             var article = {};
             article._token = "{{ csrf_token() }}";
@@ -191,11 +211,14 @@
             position: relative;
             z-index: 1;
             background: #FFFFFF;
-            max-width: 800px;
+            max-width: 1000px;
             margin: auto;
             padding: 45px;
             text-align: center;
             box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+        }
+        .form .fa{
+            margin-left: 10px;
         }
         .form input {
             font-family: "Roboto", sans-serif;
@@ -358,6 +381,8 @@
 
                 <a class="button disabled-button" id="save-{{$preview->id}}" onclick="save_article({{$preview->id}})">Save</a>
                 <a class="button" onclick="delete_article({{$preview->id}})">Delete</a>
+                <i id="loading-icon-{{$preview->id}}" class="fa fa-check-circle" aria-hidden="true"></i>
+
 
             </div>
         @endforeach

@@ -13,15 +13,16 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
 Route::get('/', function () {
     return Redirect::to(\route('action'));
 })->middleware('auth.classic');;
 
-Route::get('/login', function () {
-    return view('login');
-})->name('login');
-Route::post('/login', 'auth\Login');
+Route::middleware(['throttle:5,1'])->group(function () {
+  Route::get('/login', function () {
+      return view('login');
+    })->name('login');
+    Route::post('/login', 'auth\Login');
+});
 
 Route::get('/logout', 'auth\Login@logout')->name('logout');
 

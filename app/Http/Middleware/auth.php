@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class auth
 {
@@ -23,11 +24,11 @@ class auth
     public function handle($request, Closure $next)
     {
         $username = $request->session()->get('username');
-        $token1 = Cookie::get('token', 'hahaha');
+        $token1 = Cookie::get('token', null);
         $token2 = $request->session()->get('token');
 
-        if(!isset($token1) || empty($token1) || !isset($token2) || empty($token2) || !isset($username) || empty($username)){
-            return Redirect::to(route('login'));
+        if( ! ( isset($token1) AND ! empty($token1) AND isset($token2) AND ! empty($token2) AND isset($username) AND ! empty($username))){
+            return Redirect::to(route('login'))->withErrors('Disconnected');
 
         }
 
@@ -35,7 +36,13 @@ class auth
         if(! is_object($sql_response)){
             return Redirect::to(route('login'));
         }
+        try{
         $cryptedPassword= Crypt::decrypt($sql_response->password);
+        }catch (DecryptException $e) {
+          return Redirect::back()->withError( "Error decrypting key with given informations: ".$e )->withInput();
+
+        }
+
         $token1_lengh=strlen($token1);
         $token2_lengh=strlen($token2);
         $pass_lengh=strlen($cryptedPassword);
